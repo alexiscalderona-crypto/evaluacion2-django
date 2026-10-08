@@ -1,0 +1,47 @@
+{% extends 'casos/base.html' %}
+
+{% block contenido %}
+<h2>Listado de Casos</h2>
+
+<form method="get" style="margin-bottom: 20px;">
+    <label for="estado">Filtrar por estado:</label>
+    <select name="estado" id="estado">
+        <option value="">Todos los estados</option>
+        {% for estado in estados %}
+            <option value="{{ estado.id }}" {% if estado.id == estado_actual %}selected{% endif %}>
+                {{ estado.nombre }}
+            </option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">Filtrar</button>
+</form>
+
+<table>
+    <tr>
+        <th>Código</th>
+        <th>Cliente</th>
+        <th>Estado</th>
+        <th>Abogados</th>
+        <th>Total Pagado</th>
+        <th>Acciones</th>
+    </tr>
+    {% for caso in casos %}
+    <tr>
+        <td>{{ caso.codigo }}</td>
+        <td>{{ caso.cliente.nombres }}</td>
+        <td>{{ caso.estado.nombre }}</td>
+        <td>
+            {% for abogado in caso.abogados.all %}
+                {{ abogado.usuario.get_full_name|default:abogado.usuario.username }}<br>
+            {% endfor %}
+        </td>
+        <td>S/ {{ caso.total_pagado|floatformat:2 }}</td>
+        <td><a href="{% url 'detalle_caso' caso.id %}">Ver Detalle</a></td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="6">No hay casos registrados.</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

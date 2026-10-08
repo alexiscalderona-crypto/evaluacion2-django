@@ -1,0 +1,62 @@
+{% extends 'casos/base.html' %}
+
+{% block contenido %}
+<h2>Detalle del Caso: {{ caso.codigo }}</h2>
+
+<p><strong>Título:</strong> {{ caso.titulo }}</p>
+<p><strong>Cliente:</strong> {{ caso.cliente.nombres }}</p>
+<p><strong>Estado:</strong> {{ caso.estado.nombre }}</p>
+<p><strong>Fecha Inicio:</strong> {{ caso.fecha_inicio|date:"d/m/Y" }}</p>
+<p><strong>Total Pagado:</strong> S/ {{ caso.total_pagado|floatformat:2 }}</p>
+<p><a href="{% url 'api_caso' caso.id %}" target="_blank">Ver JSON de la API</a></p>
+
+{% if not caso.estado.permite_pagos %}
+    <p style="color: red; font-weight: bold;">Este caso no admite pagos</p>
+{% endif %}
+
+<h3>Expedientes</h3>
+<ul>
+    {% for exp in caso.expediente_set.all %}
+        <li style="margin-bottom: 10px;">
+            {{ exp.numero }} - {{ exp.juzgado }} ({{ exp.fecha_presentacion|date:"d/m/Y" }})
+            {% if exp.documento %}
+                - <a href="{{ exp.documento.url }}" target="_blank">Descargar documento</a>
+            {% else %}
+                <form action="{% url 'subir_documento' exp.id %}" method="post" enctype="multipart/form-data" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="file" name="documento" required>
+                    <button type="submit">Subir</button>
+                </form>
+            {% endif %}
+        </li>
+    {% empty %}
+        <li>No hay expedientes registrados.</li>
+    {% endfor %}
+</ul>
+
+<h3>Pagos</h3>
+{% if error_pago %}
+    <p style="color: red; font-weight: bold;">Error: {{ error_pago }}</p>
+{% endif %}
+
+<ul>
+    {% for pago in caso.pago_set.all %}
+        <li>{{ pago.fecha|date:"d/m/Y" }} - S/ {{ pago.monto|floatformat:2 }} ({{ pago.descripcion }})</li>
+    {% empty %}
+        <li>No hay pagos registrados.</li>
+    {% endfor %}
+</ul>
+
+<h4>Registrar Nuevo Pago</h4>
+<form method="post" style="background:#eee; padding:10px; margin-bottom:20px;">
+    {% csrf_token %}
+    <label>Monto:</label>
+    <input type="number" step="0.01" name="monto" required>
+    <label>Descripción:</label>
+    <input type="text" name="descripcion" required>
+    <button type="submit" class="btn">Guardar Pago</button>
+</form>
+
+<a href="{% url 'lista_casos' %}" class="btn">Volver a Casos</a>
+
+{% endblock %}
